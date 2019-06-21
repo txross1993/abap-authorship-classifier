@@ -1,0 +1,3 @@
+Extract AST from ABAP -https://www.se80.co.uk/training-education/sap-report-documentation/ABAP
+
+Authorship Analysis (defines metrics of code structure) - https://www.sciencedirect.com/science/article/pii/S0167404897000059 
