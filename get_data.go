@@ -20,7 +20,7 @@ import (
 
 var MANIFEST_FILE = ""
 var WRITES_CHAN = make(chan []byte, 255)
-var WAIT_GROUP := sync.WaitGroup
+var WAIT_GROUP sync.WaitGroup
 
 type Owner struct {
 	User string `json:"login"`
