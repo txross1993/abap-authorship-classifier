@@ -1,4 +1,6 @@
 import requests, json, os, shutil
+
+from concurent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv, find_dotenv
 from git import Repo
 
@@ -13,7 +15,7 @@ MANIFEST_FILE = os.getenv("MANIFEST_FILE")
 print("File path for manifest: %s" % MANIFEST_FILE)
 
 # Check Github for public repositories of language ABAP that is at least 100 KB in size
-REPO_SIZE_GT = 100 # Size in kilobytes of repository
+REPO_SIZE_GT = os.getenv("REPO_SIZE_KB") # Size in kilobytes of repository
 URL = "https://api.github.com/search/repositories"
 HEADERS = {"Accept": "application/vnd.github.mercy-preview+json"}
 QUERY_PARAMS = ["language:abap",
@@ -21,8 +23,13 @@ QUERY_PARAMS = ["language:abap",
                 "size:>={}".format(REPO_SIZE_GT)] # Github api query search terms
 PARAMS = {"q": QUERY_PARAMS}
 
+def clone_repo(url, repo_dir):
+    _ = Repo.clone_from(url, repo_dir)
+    return
+
 def clone_repos() -> list:
-    repo_list = []
+    repo_url_list = []
+    repo_dir_list = []
 
     r = requests.get(URL, headers=HEADERS, params=PARAMS)
     print("Running query: {}".format(r.url))
@@ -36,12 +43,14 @@ def clone_repos() -> list:
 
         # append to list
         print("Adding repository to list %s" % repo_dir)
-        repo_list.append(repo_dir)
+        repo_url_list.append(repo['clone_url'])
+        repo_dir_list.append(repo_dir)
 
         # clone
-        _ = Repo.clone_from(repo['clone_url'], repo_dir)
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        _ = executor.map(clone_repo, repo_url_list, repo_dir_list)
 
-    return repo_list
+    return repo_dir_list
 
 def get_author_project(repo):
     parts = repo.split("/")
@@ -58,7 +67,7 @@ def generate_manifest() -> dict:
 
     return manifest
 
-def extract_files_from_repos(repo_dirs) -> dict:
+def extract_files_from_repos(manifest, repo_dirs) -> dict:
     """
     Args
     repo_dirs       list    Provide the list of git repositories
@@ -66,9 +75,8 @@ def extract_files_from_repos(repo_dirs) -> dict:
     Returns
     manifest  dict   json for manifest
     """
-    manifest = generate_manifest()
 
-    manifest["total_count"] = len(repo_dirs)
+    manifest["total_count"] += len(repo_dirs)
 
     for repo in repo_dirs:
 
@@ -96,7 +104,8 @@ def extract_files_from_repos(repo_dirs) -> dict:
 def main():
     repo_list = clone_repos()
     print("Got repo list, cloning and extracting")
-    manifest = extract_files_from_repos(repo_list[0:5])
+    manifest = generate_manifest()
+    manifest = extract_files_from_repos(manifest, repo_list[0:5])
 
     with open(os.path.abspath(MANIFEST_FILE), "w", encoding="utf-8") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=2)
