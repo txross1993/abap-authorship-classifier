@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	dotenv "github.com/joho/godotenv"
 	git "gopkg.in/src-d/go-git.v4"
@@ -19,6 +20,7 @@ import (
 
 var MANIFEST_FILE = ""
 var WRITES_CHAN = make(chan []byte, 255)
+var WAIT_GROUP := sync.WaitGroup
 
 type Owner struct {
 	User string `json:"login"`
@@ -93,6 +95,7 @@ func get_repo_urls(repo_size_kb int, target GitHubRepoResponse, sc SortCondition
 
 	req.URL.RawQuery = q.Encode()
 
+	fmt.Printf("Querying for repos: %v", req.URL)
 	resp, resp_err := client.Do(req)
 
 	if resp_err != nil {
@@ -187,6 +190,7 @@ func clone_repo(url string, destination string) error {
 }
 
 func clone_and_cp(repo_url string, dest string, label *ManifestLabel) error {
+	defer WAIT_GROUP.Done()
 	err := clone_repo(repo_url, dest)
 	if err != nil {
 		return err
@@ -203,6 +207,7 @@ func CloneAllAndCopy(in []Repo, dest_dir string) {
 			file_ref: "",
 		}
 		dest := dest_dir + "/" + repo.ProjectName
+		fmt.Printf("Initiating goroutine for repo %v", repo.ProjectName)
 		go clone_and_cp(repo.CloneUrl, dest, label)
 	}
 	return
@@ -232,6 +237,8 @@ func main() {
 	sbc := get_repo_urls(REPO_SIZE_KB, sort_by_comments_json, comments)
 
 	all_repos := GetRepos(sbbm, sbi, sbc)
+	WAIT_GROUP.Add(len(all_repos))
+	fmt.Println("Got all repositories . . . Beginning cloning and labeling")
 
 	/*
 		Clone all repositories into data dir
@@ -264,5 +271,7 @@ func main() {
 		}
 
 	}()
+
+	WAIT_GROUP.Wait()
 
 }
