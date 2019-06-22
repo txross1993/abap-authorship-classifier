@@ -95,7 +95,7 @@ func get_repo_urls(repo_size_kb int, target GitHubRepoResponse, sc SortCondition
 
 	req.URL.RawQuery = q.Encode()
 
-	fmt.Printf("Querying for repos: %v", req.URL)
+	fmt.Printf("Querying for repos: %v\n", req.URL)
 	resp, resp_err := client.Do(req)
 
 	if resp_err != nil {
@@ -130,16 +130,17 @@ func GetRepos(in ...GitHubRepoResponse) []Repo {
 func copy_file(sourceFile string, destinationFile string) {
 	input, err := ioutil.ReadFile(sourceFile)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("\t\tError reading source abap file: %v\n", err)
 		return
 	}
 
 	err = ioutil.WriteFile(destinationFile, input, 0755)
 	if err != nil {
-		fmt.Println("Error creating", destinationFile)
+		fmt.Printf("\t\tError creating abap file in destination dir %v\n", destinationFile)
 		fmt.Println(err)
 		return
 	}
+	fmt.Printf("\tCopying abap file to data directory successful! %v", destinationFile)
 }
 
 func get_raw_data(repo_dir string, label *ManifestLabel) error {
@@ -152,12 +153,14 @@ func get_raw_data(repo_dir string, label *ManifestLabel) error {
 
 		if strings.HasSuffix(path, ".abap") {
 			sourceFile, _ := filepath.Abs(path)
+			fmt.Printf("\tFound abap data! %v\n", sourceFile)
 			destinationFile, _ := filepath.Abs(fmt.Sprintf("%v/%v", os.Getenv("LABELED_DATA_DIR"), filepath.Base(path)))
 			copy_file(sourceFile, destinationFile)
 
 			// Annotate manifest
 			label.file_ref = destinationFile
 			data, _ := json.Marshal(label)
+			fmt.Printf("\t\tWriting to manifest channel: %v\n", label)
 			write_to_manifest_chan(data)
 
 		}
@@ -180,7 +183,7 @@ func clone_repo(url string, destination string) error {
 		URL: url,
 	})
 
-	fmt.Printf("Cloned repository %v", url)
+	fmt.Printf("Cloned repository %v\n", url)
 
 	if err != nil {
 		return err
@@ -191,11 +194,14 @@ func clone_repo(url string, destination string) error {
 
 func clone_and_cp(repo_url string, dest string, label *ManifestLabel) error {
 	defer WAIT_GROUP.Done()
-	err := clone_repo(repo_url, dest)
-	if err != nil {
-		return err
+	if _, err := os.Stat(dest); os.IsNotExist(err) {
+		// If the repo directory does not exist, clone it
+		err := clone_repo(repo_url, dest)
+		if err != nil {
+			return err
+		}
 	}
-	err = get_raw_data(dest, label)
+	err := get_raw_data(dest, label)
 	return err
 }
 
@@ -260,6 +266,7 @@ func main() {
 	go func() {
 		for {
 			data := <-WRITES_CHAN
+			fmt.Printf("Retrieved data from channel %v\n", data)
 			_, err := bw.Write(data)
 
 			if err != nil {
