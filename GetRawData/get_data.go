@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -61,10 +60,6 @@ func (m *ManifestJson) AddProject(projectId int) {
 		m.TotalProjects += 1
 		encounteredProjectIds[projectId] = true
 	}
-}
-
-func (m *ManifestJson) AddFile() {
-	m.TotalFiles += 1
 }
 
 func copyFile(sourceFile string, destinationFile string) {
