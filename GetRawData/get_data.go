@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -195,9 +196,16 @@ func main() {
 
 	log.Printf("Loaded environment variables:\n\tREPO_DIR: %v,\n\tMANIFEST_FILE: %v,\n\tREPO_SIZE_KB: %v", REPO_DIR, MANIFEST_FILE, REPO_SIZE_KB)
 
+	REPO_SIZE_KB_INT, err := strconv.Atoi(REPO_SIZE_KB)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("Converted REPO_SIZE_KB_INT: %v", REPO_SIZE_KB_INT)
+
 	// Search for repositories
 	keyword_search := []string{"*", "abap", "sap", "program"}
-	allRepos := rq.GetAbapRepos(keyword_search, REPO_SIZE_KB)
+	allRepos := rq.GetAbapRepos(keyword_search, REPO_SIZE_KB_INT)
 
 	WAIT_GROUP.Add(len(allRepos))
 	fmt.Println("Got all repositories . . . Beginning cloning and labeling")
