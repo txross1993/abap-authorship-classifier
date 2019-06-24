@@ -201,7 +201,7 @@ func main() {
 
 	REPO_SIZE_KB_INT, err := strconv.Atoi(REPO_SIZE_KB)
 	if err != nil {
-		log.Fatal(err)
+		REPO_SIZE_KB_INT = 3000
 	}
 
 	log.Printf("Converted REPO_SIZE_KB_INT: %v", REPO_SIZE_KB_INT)
