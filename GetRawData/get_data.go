@@ -89,7 +89,11 @@ func getRawData(repoDir string, label *ManifestProjectLabel) error {
 		if strings.HasSuffix(path, ".abap") {
 			sourceFile, _ := filepath.Abs(path)
 			log.Printf("\tFound abap data! %v\n", sourceFile)
-			destinationFile, _ := filepath.Abs(fmt.Sprintf("%v/%v", os.Getenv("LABELED_DATA_DIR"), filepath.Base(path)))
+			destinationFile, err := filepath.Abs(fmt.Sprintf("%v/%v", os.Getenv("LABELED_DATA_DIR"), filepath.Base(path)))
+
+			if err != nil {
+				log.Fatal(err)
+			}
 
 			absPathDestinationFile, _ := filepath.Abs(destinationFile)
 			if _, err := os.Stat(absPathDestinationFile); os.IsNotExist(err) {
@@ -193,11 +197,12 @@ func main() {
 	REPO_DIR, _ := filepath.Abs(os.Getenv("REPO_DIR"))
 	MANIFEST_FILE, _ := filepath.Abs(os.Getenv("MANIFEST_FILE"))
 	REPO_SIZE_KB := os.Getenv("REPO_SIZE_KB")
+	LABELED_DATA_DIR := os.Getenv("LABELED_DATA_DIR")
 	if value, exists := os.LookupEnv("REPO_SIZE_KB"); exists {
 		log.Printf("Found env var REPO_SIZE_KB: %v", value)
 	}
 
-	log.Printf("Loaded environment variables:\n\tREPO_DIR: %v,\n\tMANIFEST_FILE: %v,\n\tREPO_SIZE_KB: %v", REPO_DIR, MANIFEST_FILE, REPO_SIZE_KB)
+	log.Printf("Loaded environment variables:\n\tREPO_DIR: %v,\n\tMANIFEST_FILE: %v,\n\tREPO_SIZE_KB: %v,\n\tLABELED_DATA_DIR: %v", REPO_DIR, MANIFEST_FILE, REPO_SIZE_KB, LABELED_DATA_DIR)
 
 	REPO_SIZE_KB_INT, err := strconv.Atoi(REPO_SIZE_KB)
 	if err != nil {
