@@ -18,6 +18,11 @@ type Repo struct {
 	Language string  `json:"language"`
 }
 
+func (r *Repo) Author() string {
+	parts := strings.Split(r.FullName, "/")
+	return parts[0]
+}
+
 func (r *Repo) String() string {
 	return fmt.Sprintf("Id: %v\n\tName:%v\n\tScore:%v\n\tLanguage:%v\n\n", r.Id, r.FullName, r.Score, r.Language)
 }

@@ -56,13 +56,13 @@ func getRawData(repoDir string, label *ManifestLabel) error {
 			sourceFile, _ := filepath.Abs(path)
 			fmt.Printf("\tFound abap data! %v\n", sourceFile)
 			destinationFile, _ := filepath.Abs(fmt.Sprintf("%v/%v", os.Getenv("LABELED_DATA_DIR"), filepath.Base(path)))
-			copy_file(sourceFile, destinationFile)
+			copyFile(sourceFile, destinationFile)
 
 			// Annotate manifest
-			label.file_ref = destinationFile
+			label.fileRef = destinationFile
 			data, _ := json.Marshal(label)
 			fmt.Printf("\t\tWriting to manifest channel: %v\n", label)
-			write_to_manifest_chan(data)
+			writeToManifestChan(data)
 
 		}
 		return nil
@@ -106,15 +106,15 @@ func cloneAndCopy(repo_url string, dest string, label *ManifestLabel) error {
 	return err
 }
 
-func CloneAllAndCopy(in []Repo, destDir string) {
+func CloneAllAndCopy(in []rq.Repo, destDir string) {
 	for _, repo := range in {
 		label := &ManifestLabel{
-			author:  repo.Owner.User,
-			project: repo.ProjectName,
+			author:  repo.Author(),
+			project: repo.Name,
 			fileRef: "",
 		}
-		dest := destDir + "/" + repo.ProjectName
-		fmt.Printf("Initiating goroutine for repo %v", repo.ProjectName)
+		dest := destDir + "/" + label.project
+		fmt.Printf("Initiating goroutine for repo %v", label.project)
 		go cloneAndCopy(repo.CloneUrl, dest, label)
 	}
 	return
