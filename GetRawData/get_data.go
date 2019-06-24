@@ -84,7 +84,7 @@ func getRawData(repoDir string, label *ManifestLabel) error {
 func writeToManifestChan(data []byte) {
 	// Write label to manifest file
 	var b bytes.Buffer
-	b.Write([]byte(data))
+	b.Write(data)
 	b.Write([]byte("\n"))
 	WRITES_CHAN <- b.Bytes()
 }
