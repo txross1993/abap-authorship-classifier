@@ -190,11 +190,11 @@ func CloneAllAndCopy(in []rq.Repo, destDir string) {
 func main() {
 	// Load env vars
 	dotenv.Load()
-	REPO_DIR := os.Getenv("REPO_DIR")
+	REPO_DIR, _ := filepath.Abs(os.Getenv("REPO_DIR"))
 	MANIFEST_FILE, _ := filepath.Abs(os.Getenv("MANIFEST_FILE"))
 	REPO_SIZE_KB, _ := strconv.Atoi(os.Getenv("REPO_SIZE_KB"))
 
-	log.Printf("Loaded environment variables:\n\tREPO_DIR: %v,\n\tMANIFEST_FILE: %v\n\t,REPO_SIZE_KB: %v", REPO_DIR, MANIFEST_FILE, REPO_SIZE_KB)
+	log.Printf("Loaded environment variables:\n\tREPO_DIR: %v,\n\tMANIFEST_FILE: %v,\n\tREPO_SIZE_KB: %v", REPO_DIR, MANIFEST_FILE, REPO_SIZE_KB)
 
 	// Search for repositories
 	keyword_search := []string{"*", "abap", "sap", "program"}
