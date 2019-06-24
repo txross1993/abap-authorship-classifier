@@ -194,6 +194,8 @@ func main() {
 	MANIFEST_FILE, _ := filepath.Abs(os.Getenv("MANIFEST_FILE"))
 	REPO_SIZE_KB, _ := strconv.Atoi(os.Getenv("REPO_SIZE_KB"))
 
+	log.Prinf("Loaded environment variables:\n\tREPO_DIR: %v,\n\tMANIFEST_FILE: %v\n\t,REPO_SIZE_KB: %v", REPO_DIR, MANIFEST_FILE, REPO_SIZE_KB)
+
 	// Search for repositories
 	keyword_search := []string{"*", "abap", "sap", "program"}
 	allRepos := rq.GetAbapRepos(keyword_search, REPO_SIZE_KB)
