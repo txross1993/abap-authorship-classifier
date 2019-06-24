@@ -192,7 +192,7 @@ func main() {
 	dotenv.Load()
 	REPO_DIR, _ := filepath.Abs(os.Getenv("REPO_DIR"))
 	MANIFEST_FILE, _ := filepath.Abs(os.Getenv("MANIFEST_FILE"))
-	REPO_SIZE_KB, _ := strconv.Atoi(os.Getenv("REPO_SIZE_KB"))
+	REPO_SIZE_KB, _ := os.Getenv("REPO_SIZE_KB")
 
 	log.Printf("Loaded environment variables:\n\tREPO_DIR: %v,\n\tMANIFEST_FILE: %v,\n\tREPO_SIZE_KB: %v", REPO_DIR, MANIFEST_FILE, REPO_SIZE_KB)
 
