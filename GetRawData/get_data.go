@@ -22,8 +22,8 @@ var MANIFEST_FILE = ""
 var LABELED_DATA_DIR = ""
 var WRITES_CHAN = make(chan []byte, 255)
 var WAIT_GROUP sync.WaitGroup
-var encounteredProjectIds map[int]bool
-var encounteredAuthorIds map[int]bool
+var encounteredProjectIds = make(map[int]bool)
+var encounteredAuthorIds = make(map[int]bool)
 
 type ManifestProjectLabel struct {
 	AuthorId  int    `json:AuthorId`
