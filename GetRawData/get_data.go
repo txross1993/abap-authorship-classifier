@@ -192,7 +192,10 @@ func main() {
 	dotenv.Load()
 	REPO_DIR, _ := filepath.Abs(os.Getenv("REPO_DIR"))
 	MANIFEST_FILE, _ := filepath.Abs(os.Getenv("MANIFEST_FILE"))
-	REPO_SIZE_KB := os.Getenv("REPO_SIZE_KB")
+	//REPO_SIZE_KB := os.Getenv("REPO_SIZE_KB")
+	value, exists := os.LookupEnv("REPO_SIZE_KB"); exists {
+		log.Printf("Found env var REPO_SIZE_KB: %v", value)
+	}
 
 	log.Printf("Loaded environment variables:\n\tREPO_DIR: %v,\n\tMANIFEST_FILE: %v,\n\tREPO_SIZE_KB: %v", REPO_DIR, MANIFEST_FILE, REPO_SIZE_KB)
 
