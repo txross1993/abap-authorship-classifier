@@ -19,6 +19,7 @@ import (
 )
 
 var MANIFEST_FILE = ""
+var LABELED_DATA_DIR = ""
 var WRITES_CHAN = make(chan []byte, 255)
 var WAIT_GROUP sync.WaitGroup
 var encounteredProjectIds map[int]bool
@@ -89,7 +90,7 @@ func getRawData(repoDir string, label *ManifestProjectLabel) error {
 		if strings.HasSuffix(path, ".abap") {
 			sourceFile, _ := filepath.Abs(path)
 			log.Printf("\tFound abap data! %v\n", sourceFile)
-			destinationFile, err := filepath.Abs(fmt.Sprintf("%v/%v", os.Getenv("LABELED_DATA_DIR"), filepath.Base(path)))
+			destinationFile, err := filepath.Abs(fmt.Sprintf("%v/%v", LABELED_DATA_DIR, filepath.Base(path)))
 
 			if err != nil {
 				log.Fatal(err)
@@ -103,7 +104,7 @@ func getRawData(repoDir string, label *ManifestProjectLabel) error {
 					return err
 				}
 			} else {
-				log.Println("Skipping copy of existing abap file %v \n", destinationFile)
+				log.Printf("Skipping copy of existing abap file %v", destinationFile)
 			}
 
 			// Annotate manifest
@@ -197,7 +198,7 @@ func main() {
 	REPO_DIR, _ := filepath.Abs(os.Getenv("REPO_DIR"))
 	MANIFEST_FILE, _ := filepath.Abs(os.Getenv("MANIFEST_FILE"))
 	REPO_SIZE_KB := os.Getenv("REPO_SIZE_KB")
-	LABELED_DATA_DIR := os.Getenv("LABELED_DATA_DIR")
+	LABELED_DATA_DIR = os.Getenv("LABELED_DATA_DIR")
 	if value, exists := os.LookupEnv("REPO_SIZE_KB"); exists {
 		log.Printf("Found env var REPO_SIZE_KB: %v", value)
 	}
