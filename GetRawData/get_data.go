@@ -56,7 +56,17 @@ func getRawData(repoDir string, label *ManifestLabel) error {
 			sourceFile, _ := filepath.Abs(path)
 			fmt.Printf("\tFound abap data! %v\n", sourceFile)
 			destinationFile, _ := filepath.Abs(fmt.Sprintf("%v/%v", os.Getenv("LABELED_DATA_DIR"), filepath.Base(path)))
-			copyFile(sourceFile, destinationFile)
+
+			absPathDestinationFile, _ := filepath.Abs(destinationFile)
+			if _, err := os.Stat(absPathDestinationFile); os.IsNotExist(err) {
+				// If the destination file does not exist, copy it to the destination dir
+				copyFile(sourceFile, destinationFile)
+				if err != nil {
+					return err
+				}
+			} else {
+				fmt.Println("Skipping copy of existing abap file %v \n", destinationFile)
+			}
 
 			// Annotate manifest
 			label.fileRef = destinationFile
@@ -101,6 +111,8 @@ func cloneAndCopy(repo_url string, dest string, label *ManifestLabel) error {
 		if err != nil {
 			return err
 		}
+	} else {
+		fmt.Println("Skipping existing repository: %v\n", repo_url)
 	}
 	err := getRawData(dest, label)
 	return err
@@ -160,9 +172,7 @@ func main() {
 			if err != nil {
 				fmt.Println(err)
 			}
-			if bw.Available() < 64 {
-				bw.Flush()
-			}
+			bw.Flush()
 		}
 
 	}()
