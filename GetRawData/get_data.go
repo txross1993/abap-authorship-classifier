@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -21,30 +22,68 @@ import (
 var MANIFEST_FILE = ""
 var WRITES_CHAN = make(chan []byte, 255)
 var WAIT_GROUP sync.WaitGroup
+var encounteredProjectIds map[int]bool
+var encounteredAuthorIds map[int]bool
 
-type ManifestLabel struct {
-	author  string `json:"author"`
-	project string `json:"project"`
-	fileRef string `json:"file_ref"`
+type ManifestProjectLabel struct {
+	AuthorId  int    `json:AuthorId`
+	Author    string `json:"Author"`
+	Project   string `json:"Project"`
+	ProjectId int    `json:"ProjectId"`
+	FileRef   string `json:"FileRef"`
+}
+
+type ManifestJson struct {
+	TotalFiles    int                    `json:"TotalFiles"`
+	TotalAuthors  int                    `json:"TotalAuthors"`
+	TotalProjects int                    `json:"TotalProjects"`
+	Projects      []ManifestProjectLabel `json:"AuthorProjects"`
+}
+
+func (m *ManifestJson) AddFile() {
+	m.TotalFiles += 1
+}
+
+func (m *ManifestJson) AddAuthor(authorId int) {
+	if encounteredAuthorIds[authorId] == true {
+		// Already encountered, don't increment TotalAuthors
+	} else {
+		m.TotalAuthors += 1
+		encounteredAuthorIds[authorId] = true
+	}
+
+}
+
+func (m *ManifestJson) AddProject(projectId int) {
+	if encounteredProjectIds[projectId] == true {
+		// Already encountered, don't increment TotalAuthors
+	} else {
+		m.TotalProjects += 1
+		encounteredProjectIds[projectId] = true
+	}
+}
+
+func (m *ManifestJson) AddFile() {
+	m.TotalFiles += 1
 }
 
 func copyFile(sourceFile string, destinationFile string) {
 	input, err := ioutil.ReadFile(sourceFile)
 	if err != nil {
-		fmt.Printf("\t\tError reading source abap file: %v\n", err)
+		log.Printf("\t\tError reading source abap file: %v\n", err)
 		return
 	}
 
 	err = ioutil.WriteFile(destinationFile, input, 0755)
 	if err != nil {
-		fmt.Printf("\t\tError creating abap file in destination dir %v\n", destinationFile)
-		fmt.Println(err)
+		log.Printf("\t\tError creating abap file in destination dir %v\n", destinationFile)
+		log.Print(err)
 		return
 	}
 	fmt.Printf("\tCopying abap file to data directory successful! %v", destinationFile)
 }
 
-func getRawData(repoDir string, label *ManifestLabel) error {
+func getRawData(repoDir string, label *ManifestProjectLabel) error {
 	// Copy any abap files to the raw data directory
 	err := filepath.Walk(repoDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -69,10 +108,22 @@ func getRawData(repoDir string, label *ManifestLabel) error {
 			}
 
 			// Annotate manifest
-			label.fileRef = destinationFile
-			data, _ := json.Marshal(label)
-			fmt.Printf("\t\tWriting to manifest channel: %v\n", label)
-			writeToManifestChan(data)
+			/*
+				AuthorId  int    `json:AuthorId`
+				Author    string `json:"Author"`
+				Project   string `json:"Project"`
+				ProjectId int    `json:"ProjectId"`
+				FileRef   string `json:"FileRef"`
+			*/
+
+			label.FileRef = destinationFile
+			b, err := json.Marshal(label)
+			if err != nil {
+				log.Fatal("Error marshalling project data label")
+			}
+
+			log.Printf("\t\tWriting to manifest channel: %v\n", label)
+			writeToManifestChan(b)
 
 		}
 		return nil
@@ -103,7 +154,7 @@ func cloneRepo(url string, destination string) error {
 	return nil
 }
 
-func cloneAndCopy(repo_url string, dest string, label *ManifestLabel) error {
+func cloneAndCopy(repo_url string, dest string, label *ManifestProjectLabel) error {
 	defer WAIT_GROUP.Done()
 	if _, err := os.Stat(dest); os.IsNotExist(err) {
 		// If the repo directory does not exist, clone it
@@ -119,14 +170,23 @@ func cloneAndCopy(repo_url string, dest string, label *ManifestLabel) error {
 }
 
 func CloneAllAndCopy(in []rq.Repo, destDir string) {
+	/* ManifestProjectLabel
+	AuthorId  int    `json:AuthorId`
+	Author    string `json:"Author"`
+	Project   string `json:"Project"`
+	ProjectId int    `json:"ProjectId"`
+	FileRef   string `json:"FileRef"`
+	*/
 	for _, repo := range in {
-		label := &ManifestLabel{
-			author:  repo.Author(),
-			project: repo.Name,
-			fileRef: "",
+		label := &ManifestProjectLabel{
+			AuthorId:  repo.Owner.Id,
+			Author:    repo.Owner.Login,
+			Project:   repo.Name,
+			ProjectId: repo.Id,
+			FileRef:   "",
 		}
-		dest := destDir + "/" + label.project
-		fmt.Printf("Initiating goroutine for repo %v", label.project)
+		dest := destDir + "/" + label.Project
+		log.Printf("Initiating goroutine for repo %v", label.Project)
 		go cloneAndCopy(repo.CloneUrl, dest, label)
 	}
 	return
@@ -158,25 +218,43 @@ func main() {
 
 	// Write channel to manifest file
 	f, _ := os.Create(MANIFEST_FILE)
-	bw := bufio.NewWriter(f)
 
 	defer f.Close()
 	defer close(WRITES_CHAN)
 
+	MANIFEST_JSON := ManifestJson{
+		TotalAuthors: 0,
+		TotalFiles:   0,
+		Projects:     []ManifestProjectLabel{},
+	}
+
 	go func() {
 		for {
 			data := <-WRITES_CHAN
+			label := ManifestProjectLabel{}
 			fmt.Printf("Retrieved data from channel %v\n", data)
-			_, err := bw.Write(data)
-
+			err := json.Unmarshal(data, &label)
 			if err != nil {
-				fmt.Println(err)
+				log.Fatal(err)
 			}
-			bw.Flush()
+
+			// Increment Manifest Json Counters
+			MANIFEST_JSON.AddAuthor(label.AuthorId)
+			MANIFEST_JSON.AddProject(label.ProjectId)
+			MANIFEST_JSON.AddFile()
+			MANIFEST_JSON.Projects = append(MANIFEST_JSON.Projects, label)
+
 		}
 
 	}()
 
 	WAIT_GROUP.Wait()
 
+	//Write Json To File
+	jsonData, err := json.MarshalIndent(MANIFEST_JSON, "", " ")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ioutil.WriteFile(MANIFEST_FILE, jsonData, 0755)
 }

@@ -9,18 +9,19 @@ import (
 	"strings"
 )
 
+type Owner struct {
+	Login string `json:"login"`
+	Id    int    `json:"id"`
+}
+
 type Repo struct {
 	Id       int     `json:"id"`
 	Name     string  `json:"name"`
 	FullName string  `json:"full_name"`
+	Owner    Owner   `json:"owner"`
 	CloneUrl string  `json:"clone_url"`
 	Score    float64 `json:"score"`
 	Language string  `json:"language"`
-}
-
-func (r *Repo) Author() string {
-	parts := strings.Split(r.FullName, "/")
-	return parts[0]
 }
 
 func (r *Repo) String() string {
