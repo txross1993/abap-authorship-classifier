@@ -193,7 +193,7 @@ func main() {
 	REPO_DIR, _ := filepath.Abs(os.Getenv("REPO_DIR"))
 	MANIFEST_FILE, _ := filepath.Abs(os.Getenv("MANIFEST_FILE"))
 	//REPO_SIZE_KB := os.Getenv("REPO_SIZE_KB")
-	value, exists := os.LookupEnv("REPO_SIZE_KB"); exists {
+	if value, exists := os.LookupEnv("REPO_SIZE_KB"); exists {
 		log.Printf("Found env var REPO_SIZE_KB: %v", value)
 	}
 
