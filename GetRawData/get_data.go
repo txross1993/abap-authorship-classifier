@@ -93,7 +93,7 @@ func getRawData(repoDir string, label *ManifestProjectLabel) error {
 			destinationFile, err := filepath.Abs(fmt.Sprintf("%v/%v", LABELED_DATA_DIR, filepath.Base(path)))
 
 			if err != nil {
-				log.Fatal(err)
+				log.Fatalf("Unable to find absolute path of destination file: %v,\n\tTrace: %v", destinationFile, err)
 			}
 
 			absPathDestinationFile, _ := filepath.Abs(destinationFile)
@@ -119,7 +119,7 @@ func getRawData(repoDir string, label *ManifestProjectLabel) error {
 			label.FileRef = destinationFile
 			b, err := json.Marshal(label)
 			if err != nil {
-				log.Fatal("Error marshalling project data label")
+				log.Fatalf("ERROR - marshalling project data label failed: %v, %v", label, err)
 			}
 
 			log.Printf("\t\tWriting to manifest channel: %v\n", label)
@@ -166,7 +166,9 @@ func cloneAndCopy(repo_url string, dest string, label *ManifestProjectLabel) {
 		log.Println("Skipping existing repository: %v\n", repo_url)
 	}
 	err := getRawData(dest, label)
-	log.Fatal(err)
+	if err != nil {
+		log.Fatal("ERROR getting raw abap data files: %v", err)
+	}
 }
 
 func CloneAllAndCopy(in []rq.Repo, destDir string) {
@@ -248,7 +250,7 @@ func main() {
 			log.Printf("Retrieved data from channel %v\n", data)
 			err := json.Unmarshal(data, &label)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatalf("ERROR - Unable to unmarshal json from channel %v", err)
 			}
 
 			// Increment Manifest Json Counters
