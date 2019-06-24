@@ -82,13 +82,13 @@ func getRawData(repoDir string, label *ManifestProjectLabel) error {
 	// Copy any abap files to the raw data directory
 	err := filepath.Walk(repoDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			fmt.Printf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
+			log.Printf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
 			return err
 		}
 
 		if strings.HasSuffix(path, ".abap") {
 			sourceFile, _ := filepath.Abs(path)
-			fmt.Printf("\tFound abap data! %v\n", sourceFile)
+			log.Printf("\tFound abap data! %v\n", sourceFile)
 			destinationFile, _ := filepath.Abs(fmt.Sprintf("%v/%v", os.Getenv("LABELED_DATA_DIR"), filepath.Base(path)))
 
 			absPathDestinationFile, _ := filepath.Abs(destinationFile)
@@ -99,7 +99,7 @@ func getRawData(repoDir string, label *ManifestProjectLabel) error {
 					return err
 				}
 			} else {
-				fmt.Println("Skipping copy of existing abap file %v \n", destinationFile)
+				log.Println("Skipping copy of existing abap file %v \n", destinationFile)
 			}
 
 			// Annotate manifest
@@ -140,7 +140,7 @@ func cloneRepo(url string, destination string) error {
 		URL: url,
 	})
 
-	fmt.Printf("Cloned repository %v\n", url)
+	log.Printf("Cloned repository %v\n", url)
 
 	if err != nil {
 		return err
@@ -149,19 +149,19 @@ func cloneRepo(url string, destination string) error {
 	return nil
 }
 
-func cloneAndCopy(repo_url string, dest string, label *ManifestProjectLabel) error {
+func cloneAndCopy(repo_url string, dest string, label *ManifestProjectLabel) {
 	defer WAIT_GROUP.Done()
 	if _, err := os.Stat(dest); os.IsNotExist(err) {
 		// If the repo directory does not exist, clone it
 		err := cloneRepo(repo_url, dest)
 		if err != nil {
-			return err
+			log.Fatal(err)
 		}
 	} else {
-		fmt.Println("Skipping existing repository: %v\n", repo_url)
+		log.Println("Skipping existing repository: %v\n", repo_url)
 	}
 	err := getRawData(dest, label)
-	return err
+	log.Fatal(err)
 }
 
 func CloneAllAndCopy(in []rq.Repo, destDir string) {
@@ -227,7 +227,7 @@ func main() {
 		for {
 			data := <-WRITES_CHAN
 			label := ManifestProjectLabel{}
-			fmt.Printf("Retrieved data from channel %v\n", data)
+			log.Printf("Retrieved data from channel %v\n", data)
 			err := json.Unmarshal(data, &label)
 			if err != nil {
 				log.Fatal(err)
@@ -251,5 +251,6 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Printf("Writing to manifest file %v", MANIFEST_FILE)
 	ioutil.WriteFile(MANIFEST_FILE, jsonData, 0755)
 }
