@@ -4,7 +4,7 @@
 # Copy and update manifest.json to manifest_gs.json to reflect gs locations
 ###########################################################################
 
-import json
+import json, sys
 
 dest_prefix = "gs://emergingtech/abap_classifier/data"
 
@@ -23,11 +23,11 @@ def replacePrefix(json_data):
     return json_data
 
 def write_manifest_gs(replaced_json_data):
-    with open("manifest_gs.json", "w") as f:
+    with open(sys.argv[2], "w") as f:
         f.write(json.dumps(replaced_json_data))
 
 def main():
-    data = load_manifest("manifest.json")
+    data = load_manifest(sys.argv[1])
     data_replaced = replacePrefix(data)
     write_manifest_gs(data_replaced)
 
