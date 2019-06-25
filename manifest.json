@@ -1,0 +1,28 @@
+{
+    "TotalFiles": 1260,
+    "TotalAuthors": 16,
+    "TotalProjects": 19,
+    "AuthorProjects": [
+     {
+      "AuthorId": 4462044,
+      "Author": "koemaeda",
+      "Project": "abap-markdown",
+      "ProjectId": 42476879,
+      "FileRef": "/home/theadora_ross/data/labeled/zcl_markdown_generator.clas.abap"
+     },
+     {
+      "AuthorId": 4462044,
+      "Author": "koemaeda",
+      "Project": "abap-markdown",
+      "ProjectId": 42476879,
+      "FileRef": "/home/theadora_ross/data/labeled/zif_markdown_generator.intf.abap"
+     },
+     {
+      "AuthorId": 4462044,
+      "Author": "koemaeda",
+      "Project": "abap-markdown",
+      "ProjectId": 42476879,
+      "FileRef": "/home/theadora_ross/data/labeled/zif_markdown_symbols.intf.abap"
+     }
+    ]
+}

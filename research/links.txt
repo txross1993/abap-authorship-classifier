@@ -1,3 +1,8 @@
-Extract AST from ABAP -https://www.se80.co.uk/training-education/sap-report-documentation/ABAP
+Extract AST from ABAP - https://www.se80.co.uk/training-education/sap-report-documentation/ABAP
 
 Authorship Analysis (defines metrics of code structure) - https://www.sciencedirect.com/science/article/pii/S0167404897000059 
+
+Using Machine Learning Methods to Establish Program Authorship
+    Sergey Gorshkov, Maxim Nered, Eugene Ilyushin, Dmitry Namiot
+    Vol 7, No 1 (2019) >	Gorshkov
+    http://injoit.org/index.php/j1/article/view/665
