@@ -12,7 +12,7 @@ def load_manifest(input_json):
     with open(input_json, "rb") as f:
         data = f.read()
 
-    return json.loads(string(data))
+    return json.loads(str(data))
 
 def replacePrefix(json_data):
     for repo in json_data["AuthorProjects"]:
